@@ -1,0 +1,89 @@
+# Build directories
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+
+# IDE files
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.o
+*.obj
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Ninja generated files
+.ninja_deps
+.ninja_log
+build.ninja
+
+# MinGW specific
+*.d
+
+# Windows specific
+Thumbs.db
+Desktop.ini
+*.log
+
+# Test outputs
+/test_results/
+*.test_output
+
+# Documentation generated
+docs/html/
+docs/latex/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Debug files
+*.pdb
+*.ilk
+*.exp
+
+# Core dumps
+core
+core.*
+*.core
+
+# Performance profiling
+*.prof
+*.gcda
+*.gcno
