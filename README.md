@@ -72,10 +72,38 @@ ADCDataAcquisition/
 
 - CMake 3.16+
 - C11/C++17兼容编译器
-- Windows: MinGW或Visual Studio
-- Linux: GCC
+- **Windows**: MinGW-w64 GCC 或 Visual Studio 2019+
+- **Linux**: GCC 9+ 或 Clang 10+
 
-### 编译步骤
+### Windows 编译步骤
+
+#### 使用 MinGW-w64 + Ninja (推荐)
+
+```powershell
+# 创建构建目录
+mkdir build
+
+# 生成构建文件 (使用Ninja)
+cmake -B build -G Ninja
+
+# 编译
+cmake --build build
+
+# 或者使用ninja直接编译
+ninja -C build
+```
+
+#### 使用 Visual Studio
+
+```powershell
+# 生成VS解决方案
+cmake -B build -G "Visual Studio 17 2022" -A x64
+
+# 编译 (Release配置)
+cmake --build build --config Release
+```
+
+### Linux 编译步骤
 
 ```bash
 # 创建构建目录
@@ -84,63 +112,109 @@ mkdir build && cd build
 # 生成构建文件
 cmake ..
 
-# 编译
-cmake --build .
+# 编译 (使用多核)
+make -j$(nproc)
 
-# 或者使用多线程编译
-cmake --build . --parallel
+# 或者使用Ninja
+cmake -B build -G Ninja
+ninja -C build
 ```
 
-### 运行程序
+### Windows 运行程序
+
+```powershell
+# 运行主程序
+.\build\adc_acquisition.exe
+
+# 指定服务器地址
+.\build\adc_acquisition.exe -s 192.168.1.100 -p 8080
+
+# 指定运行时间（秒）
+.\build\adc_acquisition.exe -t 60
+
+# 启用详细日志
+.\build\adc_acquisition.exe -v
+
+# 查看帮助
+.\build\adc_acquisition.exe -h
+```
+
+### Linux 运行程序
 
 ```bash
 # 运行主程序
-./adc_acquisition
+./build/adc_acquisition
 
 # 指定服务器地址
-./adc_acquisition -s 192.168.1.100 -p 8080
+./build/adc_acquisition -s 192.168.1.100 -p 8080
 
 # 指定运行时间（秒）
-./adc_acquisition -t 60
+./build/adc_acquisition -t 60
 
 # 启用详细日志
-./adc_acquisition -v
+./build/adc_acquisition -v
 
 # 查看帮助
-./adc_acquisition -h
+./build/adc_acquisition -h
 ```
 
 ### 运行测试服务器
 
 在另一个终端运行测试服务器（模拟上位机）：
 
+**Windows:**
+```powershell
+.\build\tests\test_server.exe
+```
+
+**Linux:**
 ```bash
-./test_server
+./build/tests/test_server
 ```
 
 ## 性能指标
 
-| 指标 | 目标值 | 说明 |
-|------|--------|------|
-| 采样率 | 40 kHz | 每秒40,000个样本 |
-| 分辨率 | 32 bits | 每个样本4字节 |
-| 数据速率 | 156.25 KB/s | 原始数据吞吐量 |
-| 端到端延迟 | < 10 ms | 采集到发送完成 |
-| 缓冲区吞吐量 | > 10M 样本/秒 | 无锁环形缓冲区 |
-| 单操作延迟 | < 1 μs | push/pop操作 |
+| 指标 | 目标值 | 实测值 | 说明 |
+|------|--------|--------|------|
+| 采样率 | 40 kHz | 39,992 Hz | 每秒40,000个样本 |
+| 分辨率 | 32 bits | 32 bits | 每个样本4字节 |
+| 数据速率 | 156.25 KB/s | ~156 KB/s | 原始数据吞吐量 |
+| 端到端延迟 | < 10 ms | < 1 ms | 采集到发送完成 |
+| 缓冲区吞吐量 | > 10M 样本/秒 | 3386 M 样本/秒 | 批量操作 |
+| 单操作延迟 | < 1 μs | 0.006 μs | push/pop操作 |
+| 采样率达成率 | > 95% | 99.98% | 实际/目标采样率 |
+| CPU占用率 | < 30% | < 2% | 单核占用 |
 
 ## 测试
 
 ### 运行单元测试
 
+**Windows:**
+```powershell
+# 进入构建目录
+cd build
+
+# 运行所有测试
+ctest -C Debug
+
+# 运行特定测试
+.\tests\test_ring_buffer.exe
+.\tests\test_adc_simulator.exe
+.\tests\test_performance.exe
+```
+
+**Linux:**
 ```bash
+# 进入构建目录
+cd build
+
 # 运行所有测试
 ctest
 
 # 运行特定测试
-./test_ring_buffer
-./test_adc_simulator
-./test_performance
+./tests/test_ring_buffer
+./tests/test_adc_simulator
+./tests/test_performance
 ```
 
 ### 测试说明
