@@ -170,7 +170,24 @@ typedef struct {
 | 采样超时 | 记录日志 | 继续采集 |
 | 内存不足 | 优雅退出 | 释放资源 |
 
-### 7.2 监控与统计
+### 7.2 错误码与字符串转换
+```c
+// 错误码定义
+typedef enum {
+    ADC_OK = 0,               // 操作成功
+    ADC_ERROR_INIT = -1,      // 初始化错误
+    ADC_ERROR_BUFFER = -2,    // 缓冲区操作错误
+    ADC_ERROR_NETWORK = -3,   // 网络操作错误
+    ADC_ERROR_THREAD = -4,    // 线程操作错误
+    ADC_ERROR_TIMEOUT = -5,   // 操作超时
+    ADC_ERROR_INVALID_PARAM = -6 // 无效参数
+} adc_error_t;
+
+// 获取错误描述字符串
+const char* adc_error_string(adc_error_t error);
+```
+
+### 7.3 监控与统计
 ```c
 typedef struct {
     uint64_t total_samples;     // 总采样数
@@ -183,21 +200,45 @@ typedef struct {
 } system_stats_t;
 ```
 
-## 8. 扩展性设计
+## 8. 配置管理模块
 
-### 8.1 多通道支持
+### 8.1 配置结构
+```c
+typedef struct {
+    adc_config_t     adc;       // ADC配置
+    buffer_config_t  buffer;    // 缓冲区配置
+    network_config_t network;   // 网络配置
+    thread_config_t  thread;    // 线程配置
+    log_config_t     log;       // 日志配置
+    int              run_time_seconds; // 运行时间
+} system_config_t;
+```
+
+### 8.2 配置管理功能
+- `config_get_default()` - 获取默认配置
+- `config_validate()` - 验证配置参数
+- `config_print()` - 打印配置信息
+
+### 8.3 配置模块优势
+- 集中管理所有系统参数
+- 支持运行时配置验证
+- 便于后续扩展配置文件加载功能
+
+## 9. 扩展性设计
+
+### 9.1 多通道支持
 - 当前设计支持单通道
 - 可通过增加缓冲区管理器扩展至多通道
 
-### 8.2 协议扩展
+### 9.2 协议扩展
 - 版本号机制支持协议升级
 - 标志位预留扩展字段
 
-### 8.3 硬件适配
+### 9.3 硬件适配
 - ADC模拟器接口抽象
 - 易于替换为真实硬件驱动
 
-## 9. 部署架构
+## 10. 部署架构
 
 ```
 ┌─────────────────────────────────────┐
@@ -223,14 +264,14 @@ typedef struct {
 └─────────────────────────────────────┘
 ```
 
-## 10. 关键性能数据
+## 11. 关键性能数据
 
-### 10.1 理论计算
+### 11.1 理论计算
 - 采样间隔: 25 μs
 - 每样本处理时间预算: < 25 μs
 - 网络带宽需求: ~200 KB/s (含协议开销)
 
-### 10.2 实测性能（i7-14700KF + 32GB DDR5）
+### 11.2 实测性能（i7-14700KF + 32GB DDR5）
 - 缓冲区写入吞吐量: 1394.12 M 样本/秒
 - 缓冲区读取吞吐量: 1814.55 M 样本/秒
 - 批量操作吞吐量: 3386.83 M 样本/秒 (256样本/批)

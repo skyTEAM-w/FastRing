@@ -70,6 +70,13 @@ typedef enum {
 } adc_error_t;
 
 /**
+ * @brief Get human-readable error string
+ * @param error Error code
+ * @return Constant string describing the error
+ */
+const char* adc_error_string(adc_error_t error);
+
+/**
  * @brief ADC sample data structure
  *
  * Represents a single ADC sample with timestamp, value, and metadata.

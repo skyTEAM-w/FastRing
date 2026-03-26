@@ -5,6 +5,8 @@ add_executable(test_server test_server.c
     ../src/network/tcp_client.c
     ../src/utils/timestamp.c
     ../src/utils/logger.c
+    ../src/utils/config.c
+    ../src/utils/adc_error.c
 )
 target_include_directories(test_server PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -20,6 +22,8 @@ add_executable(test_ring_buffer test_ring_buffer.c
     ../src/buffer/ring_buffer.c
     ../src/utils/timestamp.c
     ../src/utils/logger.c
+    ../src/utils/config.c
+    ../src/utils/adc_error.c
 )
 target_include_directories(test_ring_buffer PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -35,6 +39,8 @@ add_executable(test_adc_simulator test_adc_simulator.c
     ../src/adc/adc_simulator.c
     ../src/utils/timestamp.c
     ../src/utils/logger.c
+    ../src/utils/config.c
+    ../src/utils/adc_error.c
 )
 target_include_directories(test_adc_simulator PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -51,6 +57,8 @@ add_executable(test_performance test_performance.c
     ../src/buffer/ring_buffer.c
     ../src/utils/timestamp.c
     ../src/utils/logger.c
+    ../src/utils/config.c
+    ../src/utils/adc_error.c
 )
 target_include_directories(test_performance PRIVATE
     ${CMAKE_SOURCE_DIR}/include

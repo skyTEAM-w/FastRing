@@ -39,6 +39,7 @@ ADCDataAcquisition/
 │   ├── ring_buffer.h       # 无锁环形缓冲区
 │   ├── thread_manager.h    # 线程管理器
 │   ├── tcp_client.h        # TCP客户端
+│   ├── config.h            # 配置管理模块
 │   ├── timestamp.h         # 时间戳工具
 │   └── logger.h            # 日志系统
 ├── src/                    # 源文件目录
@@ -54,7 +55,9 @@ ADCDataAcquisition/
 │   │   └── tcp_client.c    # TCP客户端实现
 │   └── utils/
 │       ├── timestamp.c     # 时间戳实现
-│       └── logger.c        # 日志系统实现
+│       ├── logger.c        # 日志系统实现
+│       ├── config.c        # 配置管理实现
+│       └── adc_error.c     # 错误处理实现
 ├── tests/                  # 测试程序
 │   ├── CMakeLists.txt
 │   ├── test_server.c       # 测试服务器（模拟上位机）
@@ -63,7 +66,8 @@ ADCDataAcquisition/
 │   └── test_performance.c  # 性能测试
 └── docs/                   # 文档
     ├── architecture.md     # 架构设计文档
-    └── api_reference.md    # API参考文档
+    ├── api_reference.md    # API参考文档
+    └── test_report.md      # 测试报告
 ```
 
 ## 编译与运行

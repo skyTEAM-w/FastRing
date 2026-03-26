@@ -41,6 +41,8 @@ set(SOURCES
     src/network/tcp_client.c
     src/utils/timestamp.c
     src/utils/logger.c
+    src/utils/config.c
+    src/utils/adc_error.c
 )
 
 # Include directories
