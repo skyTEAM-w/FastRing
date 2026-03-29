@@ -359,6 +359,84 @@ E-Core占用: 后台任务运行在能效核心
 - ✅ 错误处理模块功能正常
 - ✅ 所有错误码正确转换
 
+### 7.5 跨平台测试结果对比
+
+#### 测试平台配置
+
+| 平台 | CPU | 内存 | 操作系统 |
+|------|-----|------|----------|
+| Windows | i7-14700KF (20核/28线程, 5.6GHz) | 32GB DDR5 | Windows 11 |
+| WSL | i7-14700KF (虚拟化) | 32GB DDR5 | Ubuntu 22.04 (WSL2) |
+| Ubuntu Server | i7-8565U (4核/8线程, 1.8-4.6GHz) | 8GB DDR4 | Ubuntu Server |
+
+#### 性能对比表
+
+| 指标 | Windows | WSL | Ubuntu Server | 目标值 |
+|------|---------|-----|---------------|--------|
+| 写入吞吐量 (M/s) | 1267.43 | 1396.84 | 196.87 | > 100 |
+| 读取吞吐量 (M/s) | 1662.23 | 1547.03 | 464.43 | > 100 |
+| 批量吞吐量 (M/s) | 3415.79 | 2987.65 | 1632.26 | > 1000 |
+| 采样率达成率 | 99.98% | 100.00% | 100.00% | > 95% |
+| 实际采样率 (Hz) | 39990.00 | 39999.42 | 39999.54 | 40000 |
+| 丢弃率 | 0% | 0% | 0% | < 1% |
+| 单样本延迟 (μs) | 0.018 | 0.017 | 0.096 | < 1 |
+| 批量延迟 (μs) | 0.114 | 0.078 | 0.585 | < 100 |
+| CPU占用率 | < 2% | < 2% | < 15% | < 30% |
+
+#### Ubuntu Server 详细测试数据
+
+```
+=== Buffer Throughput Test ===
+Write 10000000 samples:
+  Time: 50.795 ms
+  Throughput: 196.87 M samples/sec
+  Per sample: 5.080 ns
+Read 10000000 samples:
+  Time: 21.532 ms
+  Throughput: 464.43 M samples/sec
+  Per sample: 2.153 ns
+
+Batch operation (256 samples/batch):
+  Total samples: 256000000
+  Time: 156.838 ms
+  Throughput: 1632.26 M samples/sec
+  Per sample: 0.613 ns
+
+=== System Performance Test ===
+Running 5 seconds performance test...
+  Total samples: 200000
+  Dropped samples: 0 (0.0000%)
+  Target sample rate: 40000 Hz
+  Actual sample rate: 39999.54 Hz
+  Achievement: 100.00%
+  CPU time: 0.666 sec
+  Memory usage: 0 KB
+
+=== Latency Test ===
+Single sample push+pop:
+  Average: 0.096 us
+  Min: 0.000 us
+  Max: 15.000 us
+
+Batch (256 samples) push+pop:
+  Average: 0.585 us (0.002 us/sample)
+  Min: 0.000 us
+  Max: 17.000 us
+```
+
+#### 跨平台结论
+
+**所有平台均达到设计目标：**
+- ✅ 采样率达成率：三个平台均达到 **≥99.98%**
+- ✅ 丢弃率：三个平台均为 **0%**
+- ✅ 延迟：三个平台均满足实时性要求
+- ✅ 稳定性：5秒持续运行测试全部通过
+
+**性能差异分析：**
+- 高性能桌面CPU (i7-14700KF) 吞吐量约为低功耗笔记本CPU (i7-8565U) 的 **2-7倍**
+- 即使在低配置环境下，系统仍能稳定达到 **40kHz采样率目标**
+- 批量操作优化效果显著，各平台批量吞吐量均远超单操作
+
 ---
 
 ## 8. 建议与改进
@@ -445,8 +523,8 @@ Performance test completed!
 
 ---
 
-**测试报告版本**: 3.0  
-**生成日期**: 2026-03-26  
+**测试报告版本**: 4.0  
+**生成日期**: 2026-03-29  
 **测试工程师**: wuchengpei_sky  
-**优化状态**: Windows平台性能优化完成，达到40kHz采样率目标  
-**备注**: 本报告基于Windows环境优化后的测试结果，系统已达到设计目标。新增配置管理模块和错误处理模块测试。
+**优化状态**: 跨平台测试完成，Windows/Linux均达到40kHz采样率目标  
+**备注**: 本报告包含Windows、WSL和Ubuntu Server三个平台的测试结果对比。系统在所有平台均达到设计目标，包括低配置环境下的稳定运行验证。
