@@ -53,10 +53,18 @@ include_directories(
 
 # Main executable
 add_executable(adc_acquisition ${SOURCES})
-target_link_libraries(adc_acquisition
-    Threads::Threads
-    ws2_32
-)
+
+# Platform-specific libraries
+if(WIN32)
+    target_link_libraries(adc_acquisition
+        Threads::Threads
+        ws2_32
+    )
+else()
+    target_link_libraries(adc_acquisition
+        Threads::Threads
+    )
+endif()
 
 # Test programs
 enable_testing()
