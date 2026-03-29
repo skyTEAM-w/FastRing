@@ -63,6 +63,7 @@ if(WIN32)
 else()
     target_link_libraries(adc_acquisition
         Threads::Threads
+        m
     )
 endif()
 
