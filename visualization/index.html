@@ -302,12 +302,20 @@
                     <span class="stat-value">4</span>
                 </div>
                 <div class="stat-item">
+                    <span>构建文件</span>
+                    <span class="stat-value">2</span>
+                </div>
+                <div class="stat-item">
                     <span>模块数</span>
-                    <span class="stat-value">6</span>
+                    <span class="stat-value">8</span>
                 </div>
                 <div class="stat-item">
                     <span>代码行数</span>
-                    <span class="stat-value">~3500</span>
+                    <span class="stat-value">~3650</span>
+                </div>
+                <div class="stat-item">
+                    <span>跨平台支持</span>
+                    <span class="stat-value">Win/Linux</span>
                 </div>
             </div>
             
@@ -320,7 +328,7 @@
         <div class="main-content">
             <div class="header">
                 <h1>高性能ADC数据采集与传输系统</h1>
-                <p>交互式代码结构可视化 - 点击节点查看详情，拖拽移动视图</p>
+                <p>交互式代码结构可视化 - 跨平台支持 (Windows/Linux) - 点击节点查看详情</p>
             </div>
             
             <div class="search-box">
@@ -368,7 +376,7 @@
         
         const nodes = [
             { id: 'adc_types', name: 'adc_types.h', module: 'core', type: 'header', 
-              desc: '核心类型定义', lines: 150,
+              desc: '核心类型定义 (跨平台)', lines: 150,
               dependencies: [], exports: ['adc_sample_t', 'adc_error_t', 'data_block_t', 'system_stats_t'] },
             { id: 'config_h', name: 'config.h', module: 'config', type: 'header',
               desc: '配置管理头文件', lines: 145,
@@ -383,8 +391,9 @@
               desc: '线程管理器头文件', lines: 130,
               dependencies: ['adc_types', 'ring_buffer_h'], exports: ['thread_manager_t', 'thread_type_t'] },
             { id: 'tcp_client_h', name: 'tcp_client.h', module: 'network', type: 'header',
-              desc: 'TCP客户端头文件', lines: 90,
-              dependencies: ['adc_types'], exports: ['tcp_client_t', 'tcp_config_t'] },
+              desc: 'TCP客户端头文件 (跨平台)', lines: 95,
+              dependencies: ['adc_types'], exports: ['tcp_client_t', 'tcp_config_t'],
+              features: ['stddef.h支持', '跨平台socket'] },
             { id: 'timestamp_h', name: 'timestamp.h', module: 'utils', type: 'header',
               desc: '时间戳工具头文件', lines: 60,
               dependencies: [], exports: ['get_timestamp_us', 'high_res_sleep'] },
@@ -393,20 +402,24 @@
               dependencies: [], exports: ['log_init', 'LOG_INFO', 'LOG_ERROR'] },
             
             { id: 'adc_simulator_c', name: 'adc_simulator.c', module: 'adc', type: 'source',
-              desc: 'ADC模拟器实现', lines: 350,
-              dependencies: ['adc_simulator_h', 'timestamp_h', 'logger_h'], exports: [] },
+              desc: 'ADC模拟器实现 (正弦波生成)', lines: 350,
+              dependencies: ['adc_simulator_h', 'timestamp_h', 'logger_h'], exports: [],
+              features: ['sin()数学函数', 'Linux需链接-lm'] },
             { id: 'ring_buffer_c', name: 'ring_buffer.c', module: 'buffer', type: 'source',
               desc: '环形缓冲区实现', lines: 280,
               dependencies: ['ring_buffer_h', 'logger_h'], exports: [] },
             { id: 'thread_manager_c', name: 'thread_manager.c', module: 'thread', type: 'source',
-              desc: '线程管理器实现', lines: 320,
-              dependencies: ['thread_manager_h', 'logger_h'], exports: [] },
+              desc: '线程管理器实现 (跨平台)', lines: 325,
+              dependencies: ['thread_manager_h', 'logger_h'], exports: [],
+              features: ['Windows: CriticalSection', 'Linux: pthread_mutex'] },
             { id: 'thread_workers_c', name: 'thread_workers.c', module: 'thread', type: 'source',
-              desc: '线程工作函数实现', lines: 250,
-              dependencies: ['thread_manager_h', 'adc_simulator_h', 'tcp_client_h', 'ring_buffer_h'], exports: [] },
+              desc: '线程工作函数实现 (跨平台原子操作)', lines: 260,
+              dependencies: ['thread_manager_h', 'adc_simulator_h', 'tcp_client_h', 'ring_buffer_h'], exports: [],
+              features: ['Windows: InterlockedIncrement', 'Linux: stdatomic.h'] },
             { id: 'tcp_client_c', name: 'tcp_client.c', module: 'network', type: 'source',
-              desc: 'TCP客户端实现', lines: 300,
-              dependencies: ['tcp_client_h', 'logger_h', 'timestamp_h'], exports: [] },
+              desc: 'TCP客户端实现 (跨平台)', lines: 310,
+              dependencies: ['tcp_client_h', 'logger_h', 'timestamp_h'], exports: [],
+              features: ['Windows: Winsock2', 'Linux: POSIX socket'] },
             { id: 'timestamp_c', name: 'timestamp.c', module: 'utils', type: 'source',
               desc: '时间戳工具实现', lines: 180,
               dependencies: ['timestamp_h'], exports: [] },
@@ -430,11 +443,21 @@
               desc: 'ADC模拟器测试', lines: 250,
               dependencies: ['adc_simulator_h', 'timestamp_h', 'logger_h'], exports: [] },
             { id: 'test_performance', name: 'test_performance.c', module: 'test', type: 'test',
-              desc: '性能测试', lines: 220,
-              dependencies: ['ring_buffer_h', 'timestamp_h', 'logger_h'], exports: [] },
+              desc: '性能测试 (跨平台)', lines: 220,
+              dependencies: ['ring_buffer_h', 'timestamp_h', 'logger_h'], exports: [],
+              features: ['Linux需链接-lm'] },
             { id: 'test_server', name: 'test_server.c', module: 'test', type: 'test',
               desc: '测试服务器', lines: 180,
-              dependencies: ['tcp_client_h', 'timestamp_h', 'logger_h'], exports: [] }
+              dependencies: ['tcp_client_h', 'timestamp_h', 'logger_h'], exports: [] },
+            
+            { id: 'cmake', name: 'CMakeLists.txt', module: 'core', type: 'build',
+              desc: 'CMake构建配置 (跨平台)', lines: 75,
+              dependencies: [], exports: [],
+              features: ['Windows: ws2_32', 'Linux: -lm数学库', 'Ninja支持'] },
+            { id: 'tests_cmake', name: 'tests/CMakeLists.txt', module: 'test', type: 'build',
+              desc: '测试构建配置 (跨平台)', lines: 77,
+              dependencies: ['cmake'], exports: [],
+              features: ['PLATFORM_LIBS变量', '条件链接'] }
         ];
         
         const links = [];
@@ -851,6 +874,12 @@
                 <p><strong>类型:</strong> ${d.type}</p>
                 <p><strong>描述:</strong> ${d.desc}</p>
                 <p><strong>代码行数:</strong> ${d.lines}</p>
+                ${d.features ? `
+                    <div class="dependency-list">
+                        <strong>特性:</strong>
+                        ${d.features.map(f => `<span class="dependency-item">${f}</span>`).join('')}
+                    </div>
+                ` : ''}
                 ${d.dependencies.length > 0 ? `
                     <div class="dependency-list">
                         <strong>依赖:</strong>
@@ -884,6 +913,7 @@
                 <p><strong>类型:</strong> ${d.type}</p>
                 <p><strong>描述:</strong> ${d.desc}</p>
                 <p><strong>代码行数:</strong> ~${d.lines} 行</p>
+                ${d.features ? `<p><strong>特性:</strong> ${d.features.join(', ')}</p>` : ''}
                 ${d.dependencies.length > 0 ? `<p><strong>依赖文件:</strong> ${d.dependencies.join(', ')}</p>` : ''}
                 ${d.exports.length > 0 ? `<p><strong>导出符号:</strong> ${d.exports.join(', ')}</p>` : ''}
             `;
