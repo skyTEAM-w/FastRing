@@ -65,7 +65,11 @@ target_include_directories(test_performance PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
-target_link_libraries(test_performance ${PLATFORM_LIBS})
+if(WIN32)
+    target_link_libraries(test_performance ${PLATFORM_LIBS})
+else()
+    target_link_libraries(test_performance ${PLATFORM_LIBS} m)
+endif()
 
 # Add tests
 add_test(NAME ring_buffer COMMAND test_ring_buffer)

@@ -292,13 +292,14 @@ adc_error_t thread_manager_get_stats(const thread_manager_t *tm, thread_type_t t
 #ifdef _WIN32
     EnterCriticalSection(&tm->stats_lock);
 #else
-    pthread_mutex_lock(&tm->stats_lock);
+    thread_manager_t *tm_mutable = (thread_manager_t *)tm;
+    pthread_mutex_lock(&tm_mutable->stats_lock);
 #endif
     memcpy(stats, &tm->thread_stats[type], sizeof(thread_stats_t));
 #ifdef _WIN32
     LeaveCriticalSection(&tm->stats_lock);
 #else
-    pthread_mutex_unlock(&tm->stats_lock);
+    pthread_mutex_unlock(&tm_mutable->stats_lock);
 #endif
     
     return ADC_OK;

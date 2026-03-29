@@ -9,6 +9,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <stdatomic.h>
 #endif
 
 /* External declarations for thread_manager.c */
@@ -147,8 +149,13 @@ static data_block_t* get_block_from_pool(void) {
     }
     
     /* Simple round-robin allocation */
-    static volatile uint32_t pool_index = 0;
-    uint32_t idx = InterlockedIncrement((LONG *)&pool_index) % BLOCK_POOL_SIZE;
+#ifdef _WIN32
+    static volatile LONG pool_index = 0;
+    uint32_t idx = (uint32_t)InterlockedIncrement(&pool_index) % BLOCK_POOL_SIZE;
+#else
+    static atomic_uint pool_index = 0;
+    uint32_t idx = atomic_fetch_add(&pool_index, 1) % BLOCK_POOL_SIZE;
+#endif
     return g_block_pool[idx];
 }
 
