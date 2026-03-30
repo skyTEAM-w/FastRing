@@ -6,7 +6,7 @@
  * capture thread, processing thread, and network transmission thread.
  * It provides thread lifecycle management, synchronization, and statistics.
  *
- * @author ADC Data Acquisition Team
+ * @author WuChengpei_Sky
  * @version 1.0.0
  * @date 2026-03-22
  */

@@ -10,7 +10,11 @@
 - **多线程架构**: 三级流水线设计（采集-处理-传输）
 - **无锁缓冲区**: 使用无锁环形缓冲区，避免线程阻塞
 - **实时传输**: TCP网络传输，支持自动重连
-- **跨平台**: 支持Windows和Linux系统
+- **跨平台支持**: 完整支持Windows和Linux系统
+  - Windows: 使用Winsock2、InterlockedIncrement原子操作
+  - Linux: 使用POSIX socket、stdatomic.h原子操作
+- **配置管理**: 集中式配置管理模块
+- **错误处理**: 完善的错误码转换机制
 
 ## 系统架构
 
@@ -30,7 +34,7 @@
 ## 项目结构
 
 ```
-ADCDataAcquisition/
+FastRing/
 ├── CMakeLists.txt          # CMake构建配置
 ├── README.md               # 项目说明
 ├── include/                # 头文件目录
@@ -64,6 +68,8 @@ ADCDataAcquisition/
 │   ├── test_ring_buffer.c  # 环形缓冲区测试
 │   ├── test_adc_simulator.c # ADC模拟器测试
 │   └── test_performance.c  # 性能测试
+├── visualization/          # 代码结构可视化
+│   └── index.html          # 交互式可视化页面
 └── docs/                   # 文档
     ├── architecture.md     # 架构设计文档
     ├── api_reference.md    # API参考文档
@@ -178,16 +184,36 @@ ninja -C build
 
 ## 性能指标
 
-| 指标 | 目标值 | 实测值 | 说明 |
-|------|--------|--------|------|
-| 采样率 | 40 kHz | 39,992 Hz | 每秒40,000个样本 |
-| 分辨率 | 32 bits | 32 bits | 每个样本4字节 |
-| 数据速率 | 156.25 KB/s | ~156 KB/s | 原始数据吞吐量 |
-| 端到端延迟 | < 10 ms | < 1 ms | 采集到发送完成 |
-| 缓冲区吞吐量 | > 10M 样本/秒 | 3386 M 样本/秒 | 批量操作 |
-| 单操作延迟 | < 1 μs | 0.006 μs | push/pop操作 |
-| 采样率达成率 | > 95% | 99.98% | 实际/目标采样率 |
-| CPU占用率 | < 30% | < 2% | 单核占用 |
+### 跨平台性能对比
+
+| 指标 | Windows (i7-14700KF) | WSL | Ubuntu Server (i7-8565U) | 目标值 |
+|------|---------------------|-----|-------------------------|--------|
+| 采样率 | 39,990 Hz | 39,999 Hz | 39,999 Hz | 40,000 Hz |
+| 采样率达成率 | 99.98% | 100.00% | 100.00% | > 95% |
+| 批量吞吐量 | 3415 M样本/秒 | 2987 M样本/秒 | 1632 M样本/秒 | > 1000 M/s |
+| 单样本延迟 | 0.018 μs | 0.017 μs | 0.096 μs | < 1 μs |
+| 批量延迟 | 0.114 μs | 0.078 μs | 0.585 μs | < 100 μs |
+| 丢弃率 | 0% | 0% | 0% | < 1% |
+| CPU占用率 | < 2% | < 2% | < 15% | < 30% |
+
+### 关键性能数据
+
+| 指标 | 数值 | 说明 |
+|------|------|------|
+| 分辨率 | 32 bits | 每个样本4字节 |
+| 数据速率 | ~156 KB/s | 原始数据吞吐量 |
+| 端到端延迟 | < 1 ms | 采集到发送完成 |
+| 缓冲区写入吞吐量 | 196-1396 M/s | 跨平台范围 |
+| 缓冲区读取吞吐量 | 464-1662 M/s | 跨平台范围 |
+
+### 跨平台兼容性
+
+系统已验证在以下平台正常运行：
+- ✅ **Windows 11** (MinGW-w64 GCC 15.2.0)
+- ✅ **Ubuntu 22.04 WSL2** (GCC 13.3.0)
+- ✅ **Ubuntu Server** (GCC, i7-8565U + 8GB RAM)
+
+即使在低配置环境下，系统仍能稳定达到40kHz采样率目标。
 
 ## 测试
 
@@ -227,6 +253,23 @@ ctest
 - **test_adc_simulator**: 测试ADC模拟器的采样精度、稳定性和性能
 - **test_performance**: 系统整体性能测试，包括吞吐量和延迟
 - **test_server**: 模拟上位机接收数据，用于网络传输测试
+
+### 测试结果
+
+所有平台测试通过率：**100%**
+
+```
+Test project /home/administrator/project/mystress/build
+    Start 1: ring_buffer
+1/3 Test #1: ring_buffer ......................   Passed    2.02 sec
+    Start 2: adc_simulator
+2/3 Test #2: adc_simulator ....................   Passed    3.75 sec
+    Start 3: performance
+3/3 Test #3: performance ......................   Passed    5.10 sec
+
+100% tests passed, 0 tests failed out of 3
+Total Test time (real) =  10.87 sec
+```
 
 ## 配置参数
 
@@ -291,7 +334,14 @@ python -m http.server 3000
 
 - [架构设计文档](docs/architecture.md) - 详细的系统架构设计
 - [API参考文档](docs/api_reference.md) - 完整的API接口说明
-- [测试报告](docs/test_report.md) - 详细测试报告和性能分析
+- [测试报告](docs/test_report.md) - 跨平台测试报告 (v4.0)
+
+## 版本历史
+
+- **v4.0** (2026-03-29): 跨平台测试完成，新增Ubuntu Server测试结果
+- **v3.0** (2026-03-26): 新增配置管理和错误处理模块
+- **v2.0** (2026-03-25): Windows平台性能优化
+- **v1.0** (2026-03-24): 初始版本，基本功能实现
 
 ## 许可证
 
@@ -299,4 +349,4 @@ MIT License
 
 ## 作者
 
-九天揽月_SKY
+WuChengpei_Sky

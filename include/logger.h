@@ -6,7 +6,7 @@
  * multiple log levels and optional file output. It supports
  * debug, info, warning, error, and fatal log levels.
  *
- * @author ADC Data Acquisition Team
+ * @author WuChengpei_Sky
  * @version 1.0.0
  * @date 2026-03-22
  */

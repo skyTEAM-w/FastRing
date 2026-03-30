@@ -6,7 +6,7 @@
  * precise timing control required by the 40kHz ADC sampling system.
  * It uses Windows QueryPerformanceCounter for microsecond precision.
  *
- * @author ADC Data Acquisition Team
+ * @author WuChengpei_Sky
  * @version 1.0.0
  * @date 2026-03-22
  */

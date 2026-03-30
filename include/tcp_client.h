@@ -6,7 +6,7 @@
  * network transmission of ADC data to the server. It supports
  * connection management, data sending/receiving, and keep-alive.
  *
- * @author ADC Data Acquisition Team
+ * @author WuChengpei_Sky
  * @version 1.0.0
  * @date 2026-03-22
  */

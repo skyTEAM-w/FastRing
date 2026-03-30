@@ -5,7 +5,7 @@
  * This file defines the core data types, constants, and structures
  * for the high-performance ADC data acquisition and transmission system.
  *
- * @author ADC Data Acquisition Team
+ * @author WuChengpei_Sky
  * @version 1.0.0
  * @date 2026-03-22
  */
