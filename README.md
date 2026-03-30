@@ -1,20 +1,41 @@
-# 高性能ADC数据采集与传输系统
+# FastRing - 高性能ADC数据采集与传输系统
 
-## 项目简介
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)](README.md)
+[![Language](https://img.shields.io/badge/language-C11-orange.svg)](README.md)
+[![Build](https://img.shields.io/badge/build-CMake%20%7C%20Ninja-green.svg)](README.md)
 
-这是一个基于多线程架构的高性能数据采集与传输系统，实现了40kHz采样率、32位精度的ADC数据获取，并通过网络实时发送至上位机。
+一个基于多线程架构的高性能数据采集与传输系统，实现40kHz采样率、32位精度的ADC数据获取，并通过网络实时发送至上位机。
+
+## 目录
+
+- [核心特性](#核心特性)
+- [系统架构](#系统架构)
+- [快速开始](#快速开始)
+  - [环境要求](#环境要求)
+  - [编译](#编译)
+  - [运行](#运行)
+- [性能指标](#性能指标)
+- [测试](#测试)
+- [配置](#配置)
+- [可视化](#代码结构可视化)
+- [文档](#文档)
+- [贡献指南](#贡献指南)
+- [版本历史](#版本历史)
+- [许可证](#许可证)
+- [作者](#作者)
 
 ## 核心特性
 
-- **高性能采集**: 支持40kHz采样率，32位精度
-- **多线程架构**: 三级流水线设计（采集-处理-传输）
-- **无锁缓冲区**: 使用无锁环形缓冲区，避免线程阻塞
-- **实时传输**: TCP网络传输，支持自动重连
-- **跨平台支持**: 完整支持Windows和Linux系统
-  - Windows: 使用Winsock2、InterlockedIncrement原子操作
-  - Linux: 使用POSIX socket、stdatomic.h原子操作
-- **配置管理**: 集中式配置管理模块
-- **错误处理**: 完善的错误码转换机制
+- **高性能采集** - 支持40kHz采样率，32位精度
+- **多线程架构** - 三级流水线设计（采集-处理-传输）
+- **无锁缓冲区** - 使用无锁环形缓冲区，避免线程阻塞
+- **实时传输** - TCP网络传输，支持自动重连
+- **跨平台支持** - 完整支持Windows和Linux系统
+  - Windows: Winsock2 + InterlockedIncrement
+  - Linux: POSIX socket + stdatomic.h
+- **配置管理** - 集中式配置管理模块
+- **错误处理** - 完善的错误码转换机制
 
 ## 系统架构
 
@@ -31,134 +52,51 @@
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-## 项目结构
-
-```
-FastRing/
-├── CMakeLists.txt          # CMake构建配置
-├── README.md               # 项目说明
-├── include/                # 头文件目录
-│   ├── adc_types.h         # 类型定义和常量
-│   ├── adc_simulator.h     # ADC模拟器接口
-│   ├── ring_buffer.h       # 无锁环形缓冲区
-│   ├── thread_manager.h    # 线程管理器
-│   ├── tcp_client.h        # TCP客户端
-│   ├── config.h            # 配置管理模块
-│   ├── timestamp.h         # 时间戳工具
-│   └── logger.h            # 日志系统
-├── src/                    # 源文件目录
-│   ├── main.c              # 主程序入口
-│   ├── adc/
-│   │   └── adc_simulator.c # ADC模拟器实现
-│   ├── buffer/
-│   │   └── ring_buffer.c   # 环形缓冲区实现
-│   ├── thread/
-│   │   ├── thread_manager.c    # 线程管理器实现
-│   │   └── thread_workers.c    # 线程工作函数
-│   ├── network/
-│   │   └── tcp_client.c    # TCP客户端实现
-│   └── utils/
-│       ├── timestamp.c     # 时间戳实现
-│       ├── logger.c        # 日志系统实现
-│       ├── config.c        # 配置管理实现
-│       └── adc_error.c     # 错误处理实现
-├── tests/                  # 测试程序
-│   ├── CMakeLists.txt
-│   ├── test_server.c       # 测试服务器（模拟上位机）
-│   ├── test_ring_buffer.c  # 环形缓冲区测试
-│   ├── test_adc_simulator.c # ADC模拟器测试
-│   └── test_performance.c  # 性能测试
-├── visualization/          # 代码结构可视化
-│   └── index.html          # 交互式可视化页面
-└── docs/                   # 文档
-    ├── architecture.md     # 架构设计文档
-    ├── api_reference.md    # API参考文档
-    └── test_report.md      # 测试报告
-```
-
-## 编译与运行
+## 快速开始
 
 ### 环境要求
 
-- CMake 3.16+
-- C11/C++17兼容编译器
-- **Windows**: MinGW-w64 GCC 或 Visual Studio 2019+
-- **Linux**: GCC 9+ 或 Clang 10+
+| 依赖 | 版本要求 |
+|------|----------|
+| CMake | >= 3.16 |
+| C编译器 | C11兼容 |
+| Windows | MinGW-w64 GCC 或 Visual Studio 2019+ |
+| Linux | GCC 9+ 或 Clang 10+ |
 
-### Windows 编译步骤
+### 编译
 
-#### 使用 MinGW-w64 + Ninja (推荐)
+#### Windows (MinGW-w64 + Ninja)
 
 ```powershell
-# 创建构建目录
-mkdir build
-
-# 生成构建文件 (使用Ninja)
 cmake -B build -G Ninja
-
-# 编译
 cmake --build build
-
-# 或者使用ninja直接编译
-ninja -C build
 ```
 
-#### 使用 Visual Studio
+#### Windows (Visual Studio)
 
 ```powershell
-# 生成VS解决方案
 cmake -B build -G "Visual Studio 17 2022" -A x64
-
-# 编译 (Release配置)
 cmake --build build --config Release
 ```
 
-### Linux 编译步骤
+#### Linux
 
 ```bash
-# 创建构建目录
 mkdir build && cd build
-
-# 生成构建文件
 cmake ..
-
-# 编译 (使用多核)
 make -j$(nproc)
-
-# 或者使用Ninja
-cmake -B build -G Ninja
-ninja -C build
 ```
 
-### Windows 运行程序
-
-```powershell
-# 运行主程序
-.\build\adc_acquisition.exe
-
-# 指定服务器地址
-.\build\adc_acquisition.exe -s 192.168.1.100 -p 8080
-
-# 指定运行时间（秒）
-.\build\adc_acquisition.exe -t 60
-
-# 启用详细日志
-.\build\adc_acquisition.exe -v
-
-# 查看帮助
-.\build\adc_acquisition.exe -h
-```
-
-### Linux 运行程序
+### 运行
 
 ```bash
-# 运行主程序
+# 基本运行
 ./build/adc_acquisition
 
-# 指定服务器地址
+# 指定服务器
 ./build/adc_acquisition -s 192.168.1.100 -p 8080
 
-# 指定运行时间（秒）
+# 指定运行时间
 ./build/adc_acquisition -t 60
 
 # 启用详细日志
@@ -168,110 +106,45 @@ ninja -C build
 ./build/adc_acquisition -h
 ```
 
-### 运行测试服务器
-
-在另一个终端运行测试服务器（模拟上位机）：
-
-**Windows:**
-```powershell
-.\build\tests\test_server.exe
-```
-
-**Linux:**
-```bash
-./build/tests/test_server
-```
-
 ## 性能指标
 
 ### 跨平台性能对比
 
-| 指标 | Windows (i7-14700KF) | WSL | Ubuntu Server (i7-8565U) | 目标值 |
-|------|---------------------|-----|-------------------------|--------|
+| 指标 | Windows | WSL | Ubuntu Server | 目标值 |
+|------|---------|-----|---------------|--------|
 | 采样率 | 39,990 Hz | 39,999 Hz | 39,999 Hz | 40,000 Hz |
 | 采样率达成率 | 99.98% | 100.00% | 100.00% | > 95% |
-| 批量吞吐量 | 3415 M样本/秒 | 2987 M样本/秒 | 1632 M样本/秒 | > 1000 M/s |
+| 批量吞吐量 | 3415 M/s | 2987 M/s | 1632 M/s | > 1000 M/s |
 | 单样本延迟 | 0.018 μs | 0.017 μs | 0.096 μs | < 1 μs |
-| 批量延迟 | 0.114 μs | 0.078 μs | 0.585 μs | < 100 μs |
 | 丢弃率 | 0% | 0% | 0% | < 1% |
 | CPU占用率 | < 2% | < 2% | < 15% | < 30% |
 
-### 关键性能数据
+### 验证平台
 
-| 指标 | 数值 | 说明 |
-|------|------|------|
-| 分辨率 | 32 bits | 每个样本4字节 |
-| 数据速率 | ~156 KB/s | 原始数据吞吐量 |
-| 端到端延迟 | < 1 ms | 采集到发送完成 |
-| 缓冲区写入吞吐量 | 196-1396 M/s | 跨平台范围 |
-| 缓冲区读取吞吐量 | 464-1662 M/s | 跨平台范围 |
-
-### 跨平台兼容性
-
-系统已验证在以下平台正常运行：
-- ✅ **Windows 11** (MinGW-w64 GCC 15.2.0)
-- ✅ **Ubuntu 22.04 WSL2** (GCC 13.3.0)
-- ✅ **Ubuntu Server** (GCC, i7-8565U + 8GB RAM)
-
-即使在低配置环境下，系统仍能稳定达到40kHz采样率目标。
+- ✅ Windows 11 (MinGW-w64 GCC 15.2.0)
+- ✅ Ubuntu 22.04 WSL2 (GCC 13.3.0)
+- ✅ Ubuntu Server (i7-8565U + 8GB RAM)
 
 ## 测试
 
-### 运行单元测试
-
-**Windows:**
-```powershell
-# 进入构建目录
-cd build
-
-# 运行所有测试
-ctest -C Debug
-
-# 运行特定测试
-.\tests\test_ring_buffer.exe
-.\tests\test_adc_simulator.exe
-.\tests\test_performance.exe
-```
-
-**Linux:**
 ```bash
-# 进入构建目录
-cd build
-
 # 运行所有测试
-ctest
+cd build && ctest --output-on-failure
 
-# 运行特定测试
-./tests/test_ring_buffer
-./tests/test_adc_simulator
-./tests/test_performance
+# 运行单个测试
+./build/tests/test_ring_buffer
+./build/tests/test_adc_simulator
+./build/tests/test_performance
 ```
-
-### 测试说明
-
-- **test_ring_buffer**: 测试无锁环形缓冲区的功能、性能和线程安全性
-- **test_adc_simulator**: 测试ADC模拟器的采样精度、稳定性和性能
-- **test_performance**: 系统整体性能测试，包括吞吐量和延迟
-- **test_server**: 模拟上位机接收数据，用于网络传输测试
 
 ### 测试结果
 
-所有平台测试通过率：**100%**
-
 ```
-Test project /home/administrator/project/mystress/build
-    Start 1: ring_buffer
-1/3 Test #1: ring_buffer ......................   Passed    2.02 sec
-    Start 2: adc_simulator
-2/3 Test #2: adc_simulator ....................   Passed    3.75 sec
-    Start 3: performance
-3/3 Test #3: performance ......................   Passed    5.10 sec
-
 100% tests passed, 0 tests failed out of 3
 Total Test time (real) =  10.87 sec
 ```
 
-## 配置参数
+## 配置
 
 ### ADC配置
 
@@ -301,52 +174,85 @@ tcp_config_t config = {
 
 ## 代码结构可视化
 
-项目提供交互式代码结构可视化工具，帮助理解系统架构和模块依赖关系。
-
-### 启动可视化
+项目提供交互式代码结构可视化工具：
 
 ```bash
-# 进入可视化目录
 cd visualization
-
-# 启动本地服务器
 python -m http.server 3000
-
-# 浏览器访问
-# http://localhost:3000
+# 浏览器访问 http://localhost:3000
 ```
 
-### 可视化功能
-
-- **依赖关系图**: 力导向图展示文件间的依赖关系
-- **层级结构图**: 树形图展示模块层级结构
-- **数据流图**: 展示三级流水线数据流向
-
-### 交互操作
-
-- **拖拽节点**: 自由移动节点位置
-- **缩放平移**: 鼠标滚轮缩放，拖拽画布平移
-- **搜索过滤**: 输入框搜索文件或模块
-- **模块高亮**: 点击图例高亮对应模块
-- **详情查看**: 点击节点显示文件详细信息
+功能包括：
+- 依赖关系图
+- 层级结构图
+- 数据流图
 
 ## 文档
 
-- [架构设计文档](docs/architecture.md) - 详细的系统架构设计
-- [API参考文档](docs/api_reference.md) - 完整的API接口说明
-- [测试报告](docs/test_report.md) - 跨平台测试报告 (v4.0)
+| 文档 | 说明 |
+|------|------|
+| [架构设计文档](docs/architecture.md) | 详细的系统架构设计 |
+| [API参考文档](docs/api_reference.md) | 完整的API接口说明 |
+| [测试报告](docs/test_report.md) | 跨平台测试报告 (v4.0) |
+
+## 项目结构
+
+```
+FastRing/
+├── CMakeLists.txt          # CMake构建配置
+├── LICENSE                 # MIT许可证
+├── README.md               # 项目说明
+├── include/                # 头文件目录
+│   ├── adc_types.h         # 类型定义
+│   ├── adc_simulator.h     # ADC模拟器接口
+│   ├── ring_buffer.h       # 无锁环形缓冲区
+│   ├── thread_manager.h    # 线程管理器
+│   ├── tcp_client.h        # TCP客户端
+│   ├── config.h            # 配置管理
+│   ├── timestamp.h         # 时间戳工具
+│   └── logger.h            # 日志系统
+├── src/                    # 源文件目录
+│   ├── main.c              # 主程序入口
+│   ├── adc/                # ADC模块
+│   ├── buffer/             # 缓冲区模块
+│   ├── thread/             # 线程模块
+│   ├── network/            # 网络模块
+│   └── utils/              # 工具模块
+├── tests/                  # 测试程序
+├── visualization/          # 代码结构可视化
+└── docs/                   # 文档
+```
+
+## 贡献指南
+
+欢迎贡献代码、报告问题或提出建议！
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交 Pull Request
+
+### 代码规范
+
+- 遵循 C11 标准
+- 使用 4 空格缩进
+- 函数和变量使用 snake_case 命名
+- 添加必要的注释和文档
 
 ## 版本历史
 
-- **v4.0** (2026-03-29): 跨平台测试完成，新增Ubuntu Server测试结果
-- **v3.0** (2026-03-26): 新增配置管理和错误处理模块
-- **v2.0** (2026-03-25): Windows平台性能优化
-- **v1.0** (2026-03-24): 初始版本，基本功能实现
+- **v4.0** (2026-03-29) - 跨平台测试完成，新增Ubuntu Server测试结果
+- **v3.0** (2026-03-26) - 新增配置管理和错误处理模块
+- **v2.0** (2026-03-25) - Windows平台性能优化
+- **v1.0** (2026-03-24) - 初始版本，基本功能实现
 
 ## 许可证
 
-MIT License
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
 ## 作者
 
-WuChengpei_Sky
+**WuChengpei_Sky**
+
+如有问题或建议，欢迎提交 Issue。
