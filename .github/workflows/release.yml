@@ -8,16 +8,16 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
             cmake_generator: "MinGW Makefiles"
-            cpack_glob: "build/*.zip"
           - os: ubuntu-latest
             cmake_generator: "Unix Makefiles"
-            cpack_glob: "build/*.tar.gz"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -39,16 +39,31 @@ jobs:
         run: ctest --test-dir build --output-on-failure -C Release
 
       - name: Package
-        run: cpack --config build/CPackConfig.cmake
+        working-directory: build
+        run: cpack --config CPackConfig.cmake -C Release
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-package
-          path: ${{ matrix.cpack_glob }}
+          path: build/FastRing-*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
 
       - name: Publish GitHub release assets
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.cpack_glob }}
+          files: release-assets/*
