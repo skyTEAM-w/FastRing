@@ -28,8 +28,8 @@ jobs:
         shell: pwsh
         run: |
           choco install mingw --yes --no-progress
-          $gcc = Get-ChildItem -Path 'C:\ProgramData' -Recurse -Filter gcc.exe -ErrorAction Stop |
-            Where-Object { $_.FullName -match 'mingw.*\\bin\\gcc\.exe$' } |
+          $searchRoot = 'C:\ProgramData\chocolatey\lib\mingw\tools\install'
+          $gcc = Get-ChildItem -Path $searchRoot -Recurse -Filter gcc.exe -ErrorAction Stop |
             Select-Object -First 1
           if (-not $gcc) {
             throw 'Failed to locate gcc.exe after installing MinGW.'
