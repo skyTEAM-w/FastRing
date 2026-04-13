@@ -87,3 +87,6 @@ core.*
 *.prof
 *.gcda
 *.gcno
+
+# Local release tooling
+/scripts/create_release.ps1

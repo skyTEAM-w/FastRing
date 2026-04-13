@@ -81,3 +81,14 @@ add_test(NAME ring_buffer COMMAND test_ring_buffer)
 add_test(NAME adc_simulator COMMAND test_adc_simulator)
 add_test(NAME performance COMMAND test_performance)
 add_test(NAME timestamp COMMAND test_timestamp)
+
+if(FASTRING_PACKAGE_TESTS)
+    install(TARGETS
+        test_server
+        test_ring_buffer
+        test_adc_simulator
+        test_performance
+        test_timestamp
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests
+    )
+endif()
