@@ -108,8 +108,15 @@ uint64_t get_cpu_cycles(void) {
 
 #else /* Linux/Unix */
 
+#define _POSIX_C_SOURCE 200809L
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
+
+static void sleep_timespec(struct timespec *ts) {
+    while (nanosleep(ts, ts) != 0 && errno == EINTR) {
+    }
+}
 
 void timestamp_init(void) {
     /* No initialization needed */
@@ -137,11 +144,14 @@ void sleep_us(uint64_t us) {
     struct timespec ts;
     ts.tv_sec = (time_t)(us / 1000000);
     ts.tv_nsec = (long)((us % 1000000) * 1000);
-    nanosleep(&ts, NULL);
+    sleep_timespec(&ts);
 }
 
 void sleep_ms(uint32_t ms) {
-    usleep(ms * 1000);
+    struct timespec ts;
+    ts.tv_sec = (time_t)(ms / 1000);
+    ts.tv_nsec = (long)((ms % 1000) * 1000000L);
+    sleep_timespec(&ts);
 }
 
 uint64_t get_cpu_cycles(void) {

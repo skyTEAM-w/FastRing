@@ -6,24 +6,55 @@
 验证高性能ADC数据采集与传输系统的功能正确性、性能指标和稳定性。
 
 ### 1.2 测试环境
-- **操作系统**: Windows 11 Pro (23H2)
-- **编译器**: MinGW-w64 GCC 15.2.0
-- **构建系统**: CMake + Ninja
-- **CPU**: Intel Core i7-14700KF
-  - 核心/线程: 20核 (8P+12E) / 28线程
-  - 基础频率: 3.4 GHz
-  - 最大睿频: 5.6 GHz
-  - L3缓存: 33 MB
-- **内存**: 32GB DDR5
-- **GPU**: NVIDIA GeForce RTX 4070 Ti SUPER (16GB GDDR6X)
-- **存储**: NVMe SSD
+- **操作系统**: 
+  - Windows 11 Pro (23H2)
+  - Ubuntu 22.04 LTS (WSL2)
+  - Ubuntu Server (i7-8565U + 8GB RAM)
+- **编译器**: 
+  - Windows: MinGW-w64 GCC 15.2.0
+  - Linux: GCC 13.3.0
+- **构建系统**: CMake + Ninja / MinGW Makefiles
+- **CPU**: 
+  - Windows: Intel Core i7-14700KF (20核/28线程, 5.6GHz)
+  - Linux: i7-8565U (4核/8线程, 1.8-4.6GHz)
+- **内存**: 32GB DDR5 (Windows), 8GB DDR4 (Ubuntu Server)
 - **网络**: 本地回环测试 (千兆以太网)
 
 ### 1.3 测试工具
 - 自定义测试框架（基于assert）
-- 高精度计时器（QueryPerformanceCounter）
+- 高精度计时器（QueryPerformanceCounter/Clock_gettime）
 - 系统性能监控API
 - CTest测试框架
+
+### 1.4 优化重点（v5.0）
+
+本次优化以**跨平台稳定性和运行时开销**为主：
+
+| 模块 | 优化内容 | 效果 |
+|------|----------|------|
+| 构建层 | 移除 `-march=native/-mtune=native`，改用 target 级编译选项 | 避免产物绑死当前 CPU，提升可移植性 |
+| 时间模块 | POSIX 分支补充 `nanosleep` 的 `EINTR` 重试 | 减少跨平台定时行为差异 |
+| 环形缓冲区 | 增强容量归一化和对齐分配失败处理，改用 `atomic_thread_fence` | SPSC 可移植性更好 |
+| 网络模块 | WSAStartup/WSACleanup 改为引用计数式初始化，修复 0 字节发送死循环 | 避免多实例重复初始化 |
+| ADC 模拟器 | 修正 32 位分辨率移位溢出风险，采样线程加锁读取回调 | 消除数据竞争 |
+| 测试补强 | 增加容量取整、跨边界批量读写、时间单调性验证 | 测试覆盖率提升 |
+
+### 1.5 验证结果
+
+```bash
+# 使用 MinGW Makefiles 构建
+cmake -B build-make -G "MinGW Makefiles"
+cmake --build build-make
+
+# 运行测试
+ctest --test-dir build-make --output-on-failure
+```
+
+**测试结果：4/4 通过**
+- ✅ ring_buffer
+- ✅ adc_simulator
+- ✅ performance
+- ✅ timestamp
 
 ---
 
@@ -523,8 +554,8 @@ Performance test completed!
 
 ---
 
-**测试报告版本**: 4.0  
+**测试报告版本**: 5.0  
 **生成日期**: 2026-03-29  
-**测试工程师**: wuchengpei_sky  
-**优化状态**: 跨平台测试完成，Windows/Linux均达到40kHz采样率目标  
-**备注**: 本报告包含Windows、WSL和Ubuntu Server三个平台的测试结果对比。系统在所有平台均达到设计目标，包括低配置环境下的稳定运行验证。
+**测试工程师**: WuChengpei_Sky  
+**优化状态**: 跨平台稳定性优化完成，4/4测试通过  
+**备注**: 本次优化重点为跨平台稳定性和运行时开销，移除 CPU 绑定编译选项，增强 C11 原子操作可移植性，修复网络模块死循环问题。新增 timestamp 测试，所有测试通过。

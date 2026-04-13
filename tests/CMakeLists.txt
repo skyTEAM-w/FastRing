@@ -4,7 +4,7 @@
 if(WIN32)
     set(PLATFORM_LIBS Threads::Threads ws2_32)
 else()
-    set(PLATFORM_LIBS Threads::Threads)
+    set(PLATFORM_LIBS Threads::Threads m)
 endif()
 
 # Test server (simulates host PC)
@@ -47,11 +47,7 @@ target_include_directories(test_adc_simulator PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
-if(WIN32)
-    target_link_libraries(test_adc_simulator ${PLATFORM_LIBS} m)
-else()
-    target_link_libraries(test_adc_simulator ${PLATFORM_LIBS} m)
-endif()
+target_link_libraries(test_adc_simulator ${PLATFORM_LIBS})
 
 # Performance test
 add_executable(test_performance test_performance.c
@@ -65,13 +61,23 @@ target_include_directories(test_performance PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
-if(WIN32)
-    target_link_libraries(test_performance ${PLATFORM_LIBS})
-else()
-    target_link_libraries(test_performance ${PLATFORM_LIBS} m)
-endif()
+target_link_libraries(test_performance ${PLATFORM_LIBS})
+
+# Timestamp test
+add_executable(test_timestamp test_timestamp.c
+    ../src/utils/timestamp.c
+    ../src/utils/logger.c
+    ../src/utils/config.c
+    ../src/utils/adc_error.c
+)
+target_include_directories(test_timestamp PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_timestamp ${PLATFORM_LIBS})
 
 # Add tests
 add_test(NAME ring_buffer COMMAND test_ring_buffer)
 add_test(NAME adc_simulator COMMAND test_adc_simulator)
 add_test(NAME performance COMMAND test_performance)
+add_test(NAME timestamp COMMAND test_timestamp)

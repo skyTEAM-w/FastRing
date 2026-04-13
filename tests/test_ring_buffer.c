@@ -135,6 +135,47 @@ static void test_buffer_full(void) {
     printf("Buffer full test passed!\n");
 }
 
+/* Test capacity normalization and wrap-around batch operations */
+static void test_capacity_and_wraparound(void) {
+    printf("\n=== Test Capacity And Wrap-around ===\n");
+
+    ring_buffer_t *rb = ring_buffer_create(3);
+    assert(rb != NULL);
+    assert(rb->capacity == 4);
+
+    adc_sample_t samples[4];
+    for (int i = 0; i < 4; i++) {
+        samples[i].sequence = (uint32_t)i;
+        samples[i].value = i + 10;
+    }
+
+    uint32_t pushed = 0;
+    assert(ring_buffer_push_batch(rb, samples, 3, &pushed) == true);
+    assert(pushed == 3);
+
+    adc_sample_t popped[2];
+    uint32_t popped_count = 0;
+    assert(ring_buffer_pop_batch(rb, popped, 2, &popped_count) == true);
+    assert(popped_count == 2);
+    assert(popped[0].sequence == 0);
+    assert(popped[1].sequence == 1);
+
+    samples[0].sequence = 100;
+    samples[1].sequence = 101;
+    assert(ring_buffer_push_batch(rb, samples, 2, &pushed) == true);
+    assert(pushed == 2);
+
+    adc_sample_t wrapped[3];
+    assert(ring_buffer_pop_batch(rb, wrapped, 3, &popped_count) == true);
+    assert(popped_count == 3);
+    assert(wrapped[0].sequence == 2);
+    assert(wrapped[1].sequence == 100);
+    assert(wrapped[2].sequence == 101);
+
+    ring_buffer_destroy(rb);
+    printf("Capacity normalization and wrap-around test passed!\n");
+}
+
 /* Performance test */
 static void test_performance(void) {
     printf("\n=== Performance Test ===\n");
@@ -299,6 +340,7 @@ int main(int argc, char *argv[]) {
     test_basic_operations();
     test_batch_operations();
     test_buffer_full();
+    test_capacity_and_wraparound();
     test_performance();
     test_multithreaded();
     

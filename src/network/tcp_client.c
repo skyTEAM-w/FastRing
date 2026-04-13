@@ -6,7 +6,31 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#if defined(_MSC_VER)
 #pragma comment(lib, "ws2_32.lib")
+#endif
+static volatile LONG g_wsa_refcount = 0;
+
+static bool winsock_acquire(void) {
+    LONG refcount = InterlockedIncrement(&g_wsa_refcount);
+    if (refcount == 1) {
+        WSADATA wsa_data;
+        if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
+            InterlockedDecrement(&g_wsa_refcount);
+            return false;
+        }
+    }
+    return true;
+}
+
+static void winsock_release(void) {
+    LONG refcount = InterlockedDecrement(&g_wsa_refcount);
+    if (refcount == 0) {
+        WSACleanup();
+    } else if (refcount < 0) {
+        InterlockedExchange(&g_wsa_refcount, 0);
+    }
+}
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -65,8 +89,7 @@ tcp_client_t* tcp_client_create(const tcp_config_t *config) {
     }
     
 #ifdef _WIN32
-    WSADATA wsa_data;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
+    if (!winsock_acquire()) {
         LOG_ERROR("WSAStartup failed");
         free(client->send_buffer);
         free(client);
@@ -93,7 +116,7 @@ void tcp_client_destroy(tcp_client_t *client) {
     }
     
 #ifdef _WIN32
-    WSACleanup();
+    winsock_release();
 #endif
     
     free(client);
@@ -246,6 +269,11 @@ adc_error_t tcp_client_send_all(tcp_client_t *client, const void *data, size_t l
         adc_error_t err = tcp_client_send(client, ptr, remaining, &sent);
         if (err != ADC_OK) {
             return err;
+        }
+        if (sent == 0) {
+            LOG_ERROR("Socket send returned zero bytes");
+            client->connected = false;
+            return ADC_ERROR_NETWORK;
         }
         ptr += sent;
         remaining -= sent;

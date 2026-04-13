@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -49,7 +50,10 @@ static int32_t generate_sample(adc_simulator_t *adc, uint64_t timestamp_us) {
     if (signal < -1.0) signal = -1.0;
     
     /* 32-bit signed integer range: -2^31 to 2^31-1 */
-    int32_t max_val = (1 << (adc->config.resolution - 1)) - 1;
+    int32_t max_val = INT32_MAX;
+    if (adc->config.resolution > 0 && adc->config.resolution < 32) {
+        max_val = (int32_t)((1U << (adc->config.resolution - 1)) - 1U);
+    }
     return (int32_t)(signal * max_val);
 }
 
@@ -72,15 +76,29 @@ static void* capture_thread(void *param) {
         /* Check if it's time to sample */
         if (current_time >= next_sample_time) {
             adc_sample_t sample;
+            adc_callback_t callback = NULL;
+            void *callback_data = NULL;
             sample.timestamp = (uint32_t)(current_time - adc->start_time);
             sample.value = generate_sample(adc, current_time);
             sample.sequence = adc->sequence++;
             sample.channel = 0;
             sample.flags = 0;
-            
-            /* Call callback function */
-            if (adc->callback) {
-                adc->callback(&sample, adc->callback_data);
+
+#ifdef _WIN32
+            EnterCriticalSection(&adc->lock);
+#else
+            pthread_mutex_lock(&adc->lock);
+#endif
+            callback = adc->callback;
+            callback_data = adc->callback_data;
+#ifdef _WIN32
+            LeaveCriticalSection(&adc->lock);
+#else
+            pthread_mutex_unlock(&adc->lock);
+#endif
+
+            if (callback) {
+                callback(&sample, callback_data);
             }
             
             /* Calculate next sample time */

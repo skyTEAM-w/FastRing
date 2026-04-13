@@ -2,6 +2,7 @@
 #include "logger.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -9,19 +10,24 @@
 
 /* Memory barrier macros - optimized for single producer single consumer */
 #ifdef _WIN32
-    #define MEMORY_BARRIER() _ReadWriteBarrier()
-    #define READ_BARRIER() _ReadBarrier()
-    #define WRITE_BARRIER() _WriteBarrier()
+    #define MEMORY_BARRIER() MemoryBarrier()
+    #define READ_BARRIER() MemoryBarrier()
+    #define WRITE_BARRIER() MemoryBarrier()
 #else
-    #define MEMORY_BARRIER() __asm__ __volatile__ ("" ::: "memory")
-    #define READ_BARRIER() __asm__ __volatile__ ("" ::: "memory")
-    #define WRITE_BARRIER() __asm__ __volatile__ ("" ::: "memory")
+    #define MEMORY_BARRIER() atomic_thread_fence(memory_order_seq_cst)
+    #define READ_BARRIER() atomic_thread_fence(memory_order_acquire)
+    #define WRITE_BARRIER() atomic_thread_fence(memory_order_release)
 #endif
 
 /* Create ring buffer */
 ring_buffer_t* ring_buffer_create(uint32_t capacity) {
+    /* Reserve one slot to distinguish full vs empty, so the raw capacity must be >= 2. */
+    if (capacity < 2) {
+        capacity = 2;
+    }
+
     /* Capacity must be power of 2 for fast modulo with bitmask */
-    if (capacity == 0 || (capacity & (capacity - 1)) != 0) {
+    if ((capacity & (capacity - 1)) != 0) {
         /* Find next power of 2 if not already */
         uint32_t power = 1;
         while (power < capacity) {
@@ -40,7 +46,9 @@ ring_buffer_t* ring_buffer_create(uint32_t capacity) {
     #ifdef _WIN32
         rb->buffer = (adc_sample_t *)_aligned_malloc(capacity * sizeof(adc_sample_t), 64);
     #else
-        posix_memalign((void **)&rb->buffer, 64, capacity * sizeof(adc_sample_t));
+        if (posix_memalign((void **)&rb->buffer, 64, capacity * sizeof(adc_sample_t)) != 0) {
+            rb->buffer = NULL;
+        }
     #endif
     
     if (!rb->buffer) {

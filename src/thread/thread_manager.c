@@ -288,16 +288,16 @@ thread_state_t thread_manager_get_state(const thread_manager_t *tm, thread_type_
 /* Get thread statistics */
 adc_error_t thread_manager_get_stats(const thread_manager_t *tm, thread_type_t type, thread_stats_t *stats) {
     if (!tm || !stats || type < 0 || type >= THREAD_COUNT) return ADC_ERROR_INVALID_PARAM;
+    thread_manager_t *tm_mutable = (thread_manager_t *)tm;
     
 #ifdef _WIN32
-    EnterCriticalSection(&tm->stats_lock);
+    EnterCriticalSection(&tm_mutable->stats_lock);
 #else
-    thread_manager_t *tm_mutable = (thread_manager_t *)tm;
     pthread_mutex_lock(&tm_mutable->stats_lock);
 #endif
     memcpy(stats, &tm->thread_stats[type], sizeof(thread_stats_t));
 #ifdef _WIN32
-    LeaveCriticalSection(&tm->stats_lock);
+    LeaveCriticalSection(&tm_mutable->stats_lock);
 #else
     pthread_mutex_unlock(&tm_mutable->stats_lock);
 #endif

@@ -13,21 +13,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
-# Ninja-specific settings
-if(CMAKE_GENERATOR MATCHES "Ninja")
-    # Enable colored output for Ninja
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
-endif()
-
-# Compiler options
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-O3 -Wall -Wextra -pthread)
-    add_compile_options(-march=native -mtune=native)
-elseif(MSVC)
-    add_compile_options(/O2 /W4 /MP)
-endif()
-
 # Thread library
 find_package(Threads REQUIRED)
 
@@ -53,6 +38,16 @@ include_directories(
 
 # Main executable
 add_executable(adc_acquisition ${SOURCES})
+
+# Shared compile settings
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(adc_acquisition PRIVATE -O3 -Wall -Wextra)
+    if(CMAKE_GENERATOR MATCHES "Ninja")
+        target_compile_options(adc_acquisition PRIVATE -fdiagnostics-color=always)
+    endif()
+elseif(MSVC)
+    target_compile_options(adc_acquisition PRIVATE /O2 /W4 /MP)
+endif()
 
 # Platform-specific libraries
 if(WIN32)

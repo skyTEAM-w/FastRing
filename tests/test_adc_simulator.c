@@ -127,16 +127,17 @@ static void test_noise(void) {
     adc_simulator_start(adc);
     
     /* Collect samples and calculate statistics */
-    int64_t sum = 0;
-    int64_t sum_sq = 0;
+    double sum = 0.0;
+    double sum_sq = 0.0;
     int count = 1000;
     
     for (int i = 0; i < count; i++) {
         adc_sample_t sample;
         sleep_us(25);  /* ~40kHz */
         adc_simulator_get_sample(adc, &sample);
-        sum += sample.value;
-        sum_sq += (int64_t)sample.value * sample.value;
+        double value = (double)sample.value;
+        sum += value;
+        sum_sq += value * value;
     }
     
     adc_simulator_stop(adc);
